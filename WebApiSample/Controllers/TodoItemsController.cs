@@ -22,23 +22,24 @@ namespace WebApiSample.Controllers
 
         // GET: api/TodoItems
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItems()
+        public async Task<ActionResult<IEnumerable<TodoItemTDO>>> GetTodoItems()
         {
-          if (_context.TodoItems == null)
-          {
-              return NotFound();
-          }
-            return await _context.TodoItems.ToListAsync();
+            if (_context.TodoItems == null)
+            {
+                return NotFound();
+            }
+            List<TodoItem> items = await _context.TodoItems.ToListAsync();
+            return items.ConvertAll( (item) => new TodoItemTDO { Id = item.Id, Name = item.Name, IsComplete=item.IsComplete });
         }
 
         // GET: api/TodoItems/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<TodoItem>> GetTodoItem(int id)
+        public async Task<ActionResult<TodoItemTDO>> GetTodoItem(int id)
         {
-          if (_context.TodoItems == null)
-          {
-              return NotFound();
-          }
+            if (_context.TodoItems == null)
+            {
+                return NotFound();
+            }
             var todoItem = await _context.TodoItems.FindAsync(id);
 
             if (todoItem == null)
@@ -46,13 +47,13 @@ namespace WebApiSample.Controllers
                 return NotFound();
             }
 
-            return todoItem;
+            return ItemToTDO(todoItem);
         }
 
         // PUT: api/TodoItems/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTodoItem(int id, TodoItem todoItem)
+        public async Task<IActionResult> PutTodoItem(int id, TodoItemTDO todoItem)
         {
             if (id != todoItem.Id)
             {
@@ -83,13 +84,14 @@ namespace WebApiSample.Controllers
         // POST: api/TodoItems
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<TodoItem>> PostTodoItem(TodoItem todoItem)
+        public async Task<ActionResult<TodoItemTDO>> PostTodoItem(TodoItemTDO todoItem)
         {
-          if (_context.TodoItems == null)
-          {
-              return Problem("Entity set 'TodoContext.TodoItems'  is null.");
-          }
-            _context.TodoItems.Add(todoItem);
+            if (_context.TodoItems == null)
+            {
+                return Problem("Entity set 'TodoContext.TodoItems'  is null.");
+            }
+            TodoItem newItem = new TodoItem { Name = todoItem.Name , IsComplete = todoItem.IsComplete}; 
+            _context.TodoItems.Add(newItem);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetTodoItem), new { id = todoItem.Id }, todoItem);
@@ -119,5 +121,14 @@ namespace WebApiSample.Controllers
         {
             return (_context.TodoItems?.Any(e => e.Id == id)).GetValueOrDefault();
         }
+
+        private static TodoItemTDO ItemToTDO(TodoItem item) =>
+            new TodoItemTDO
+            {
+                Id = item.Id,
+                Name = item.Name,
+                IsComplete = item.IsComplete,
+            };
+        
     }
 }
