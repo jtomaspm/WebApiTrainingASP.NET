@@ -19,7 +19,12 @@ namespace WebApiSample.Controllers
         [HttpPost]
         public async Task<ActionResult<Binomial>> PutBinomial(BinomialForm BF)
         {
-            return new Binomial { };
+            Binomial res = new Binomial
+            {
+                Size = BF.SampleTotal,
+                Chance = BF.Chance
+            };
+            return res;
         }
     }
 }
